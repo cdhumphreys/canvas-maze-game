@@ -14,12 +14,30 @@ class Maze {
     this.tokenImage = new Image();
     this.tokenImage.onload = this.checkLoadedImages.bind(this);
     this.tokenImage.src = this.options.imgs.tokenImageUrl;
+
+    this.numTargets = 0;
+
+    for (let y = 0; y < this.options.mazeLayout.length; y++) {
+      for (let x = 0; x < this.options.mazeLayout[0].length; x++) {
+        if (this.options.mazeLayout[y][x] === 1) {
+          this.playerPosition = [x,y];
+        }
+        else if (this.options.mazeLayout[y][x] === 2) {
+          this.numTargets++;
+        }
+      }
+    }
+
   }
 
   init() {
 
     this.mainCanvas = document.createElement('canvas');
     this.tempCanvas = document.createElement('canvas');
+
+    this.scoreBoard = document.createElement('div');
+    this.scoreBoard.id = 'scoreBoard';
+    this.scoreBoard.innerHTML = 'Score: ' + 0;
 
     this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasWidth);
 
@@ -28,6 +46,7 @@ class Maze {
     this.tempCanvas.height = this.mainCanvas.height = this.squareLength * this.options.mazeLayout.length;
 
     this.options.mazeContainer.appendChild(this.mainCanvas);
+    this.options.mazeContainer.appendChild(this.scoreBoard);
 
     this.mainCtx = this.mainCanvas.getContext('2d');
     this.tempCtx = this.tempCanvas.getContext('2d');
@@ -52,8 +71,8 @@ class Maze {
 
   setPlayer() {
     this.player = {
-      x: this.options.playerPosition[0] * this.squareLength,
-      y: this.options.playerPosition[1] * this.squareLength,
+      x: this.playerPosition[0] * this.squareLength,
+      y: this.playerPosition[1] * this.squareLength,
 
       velX: 0,
       velY: 0,
@@ -133,7 +152,11 @@ class Maze {
 
       }
     }
+  }
 
+  clearSquare(context, x ,y) {
+    context.fillStyle = this.options.backgroundColour;
+    context.fillRect(x*this.squareLength,y*this.squareLength,this.squareLength, this.squareLength);
   }
 
   drawPlayer(context, x, y, xSize, ySize) {
@@ -150,6 +173,15 @@ class Maze {
     this.player.x += this.player.velX;
     this.player.y += this.player.velY;
 
+  }
+
+  incrementScore() {
+    this.gameState.score++;
+    this.scoreBoard.innerHTML = 'Score: ' + this.gameState.score;
+
+    if (this.gameState.score >= this.numTargets) {
+      this.gameState.ended = true;
+    }
   }
 
   getGridPiece(x,y) {
@@ -213,22 +245,25 @@ class Maze {
     let playerDownLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY + this.player.hitbox);
 
 
-        // checking for contact with walls
+      // checking for contact with walls
     if (this.player.velX > 0 && (this.options.mazeLayout[playerRightArrayPos.j][playerRightArrayPos.i] === 3 ||
                                 this.options.mazeLayout[playerUpRightArrayPos.j][playerUpRightArrayPos.i] === 3 ||
                                 this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3 )) {
+
       this.player.velX = 0;
       this.player.x -= this.player.bounceDistance;
     }
     else if (this.player.velX < 0 && (this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerDownLeftArrayPos.j][playerDownLeftArrayPos.i] === 3 )) {
+
       this.player.velX = 0;
       this.player.x += this.player.bounceDistance;
     }
     else if (this.player.velY > 0 && (this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerDownLeftArrayPos.j][playerDownLeftArrayPos.i] === 3 )) {
+
       this.player.velY = 0;
       this.player.y -= this.player.bounceDistance;
 
@@ -236,15 +271,35 @@ class Maze {
     else if (this.player.velY < 0 && (this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerUpRightArrayPos.j][playerUpRightArrayPos.i] === 3 )) {
+
       this.player.velY = 0;
       this.player.y += this.player.bounceDistance;
     }
 
+    // collecting targets
+    if (this.options.mazeLayout[playerRightArrayPos.j][playerRightArrayPos.i] === 2) {
+        this.options.mazeLayout[playerRightArrayPos.j][playerRightArrayPos.i] = 0;
+        this.incrementScore();
+        this.clearSquare(this.tempCtx, playerRightArrayPos.i, playerRightArrayPos.j);
+    }
 
+    else if (this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 2) {
+        this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] = 0
+        this.incrementScore();
+        this.clearSquare(this.tempCtx, playerLeftArrayPos.i, playerLeftArrayPos.j);
+    }
 
+    else if (this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] === 2) {
+        this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] = 0;
+        this.incrementScore();
+        this.clearSquare(this.tempCtx, playerUpArrayPos.i, playerUpArrayPos.j);
+    }
 
-
-
+    else if (this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] === 2) {
+        this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] = 0;
+        this.incrementScore();
+        this.clearSquare(this.tempCtx, playerDownArrayPos.i, playerDownArrayPos.j);
+    }
 
   }
 
@@ -282,8 +337,6 @@ const mazeGame = new Maze ({
           [0,0,0,3,3,0,0,3,0,0],
           [0,2,0,3,3,0,0,0,0,0]
         ],
-        numTargets : 3,
-        playerPosition: [5,1],
         playerSpeed: 1.5,
         hitbox: 10
       });
