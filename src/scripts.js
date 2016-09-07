@@ -27,17 +27,18 @@ class Maze {
 
     this.tempCanvas.height = this.mainCanvas.height = this.squareLength * this.options.mazeLayout.length;
 
-
-
     this.options.mazeContainer.appendChild(this.mainCanvas);
 
     this.mainCtx = this.mainCanvas.getContext('2d');
     this.tempCtx = this.tempCanvas.getContext('2d');
 
     this.setPlayer();
+    this.setGameState();
     this.preRenderMaze();
     this.addListeners();
     this.render();
+
+    this.loop();
 
   }
 
@@ -56,10 +57,23 @@ class Maze {
 
       velX: 0,
       velY: 0,
-
+      speed: Math.round(this.options.playerSpeed * this.squareLength / 60),
       sizeX: this.squareLength,
       sizeY: this.squareLength
     }
+  }
+
+  setGameState() {
+    this.gameState = {
+      ended: false,
+      score: 0
+    };
+
+    this.gridMap = {
+      walls: [],
+      targets: []
+    };
+
   }
 
   preRenderMaze() {
@@ -71,13 +85,34 @@ class Maze {
   }
 
   clickHandler(e) {
-    console.log(e);
-    if (Math.abs(e.clientX - this.player.x) > Math.abs(e.clientY - this.player.y)) {
-      console.log('x');
+
+    const canvasPos = this.mainCanvas.getBoundingClientRect();
+    const canvasXOffset = canvasPos.left;
+    const canvasYOffset = canvasPos.top;
+
+    var canvasClickX = e.clientX - canvasXOffset;
+    var canvasClickY = e.clientY - canvasYOffset;
+    if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
+      if (canvasClickX > this.player.x + (this.player.sizeX/2)) {
+        this.player.velY = 0;
+        this.player.velX  = 1 * this.player.speed;
+      }
+      else if (canvasClickX < this.player.x + (this.player.sizeX/2)) {
+        this.player.velY = 0;
+        this.player.velX = -1 * this.player.speed;
+      }
     }
     else {
-      console.log('y');
+      if (canvasClickY > this.player.y + (this.player.sizeY/2)) {
+        this.player.velX = 0;
+        this.player.velY  = 1 * this.player.speed;
+      }
+      else if (canvasClickY < this.player.y + (this.player.sizeY/2)) {
+        this.player.velX = 0;
+        this.player.velY = -1 * this.player.speed;
+      }
     }
+
   }
 
   drawGrid(context, xSquares, ySquares) {
@@ -91,14 +126,19 @@ class Maze {
     for (let y = 0; y < ySquares; y++) {
       for (let x = 0; x < xSquares; x++) {
         if (this.options.mazeLayout[y][x] === 3) {
+          this.gridMap.walls.push([x*this.squareLength,y*this.squareLength]);
           context.fillRect(x*this.squareLength,y*this.squareLength,this.squareLength, this.squareLength);
         }
         else if (this.options.mazeLayout[y][x] === 2) {
+          this.gridMap.targets.push([x*this.squareLength,y*this.squareLength]);
           context.drawImage(this.tokenImage,x*this.squareLength,y*this.squareLength, this.squareLength, this.squareLength);
         }
 
       }
     }
+
+    console.log(this.gridMap);
+
 
   }
 
@@ -112,9 +152,7 @@ class Maze {
   }
 
   updatePlayer() {
-
-    checkCollisions();
-
+    this.checkCollisions();
     this.player.x += this.player.velX;
     this.player.y += this.player.velY;
 
@@ -125,16 +163,22 @@ class Maze {
     let playerMidY = this.player.y + (this.player.sizeY/2);
 
     if (this.player.x + this.player.sizeX > this.mainCanvas.width) {
-      this.player.x = this.mainCanvas - this.player.sizeX;
+      this.player.velX = 0;
+      this.player.x = this.mainCanvas.width - this.player.sizeX;
+
     }
     else if (this.player.x < 0) {
+      this.player.velX = 0;
       this.player.x = 0;
+
     }
 
     if (this.player.y + this.player.sizeY > this.mainCanvas.height) {
+      this.player.velY = 0;
       this.player.y = this.mainCanvas - this.player.sizeY;
     }
     else if (this.player.y < 0) {
+      this.player.velY = 0;
       this.player.y = 0;
     }
 
@@ -158,9 +202,9 @@ class Maze {
 
   loop() {
     if (!this.gameState.ended) {
-      requestAnimationFrame(loop);
-      updatePlayer();
-      render();
+      requestAnimationFrame(this.loop.bind(this));
+      this.updatePlayer();
+      this.render();
     }
 
 
@@ -179,14 +223,19 @@ const mazeGame = new Maze ({
           tokenImageUrl: 'build/images/coin.png',
         },
         mazeLayout: [
-          [0,0,0,0,0],
-          [1,0,0,0,0],
-          [0,0,2,0,2],
-          [0,0,0,0,3],
-          [0,2,0,3,3]
+          [0,0,0,0,0,0,0,0,0,0],
+          [1,0,0,0,0,0,0,3,0,0],
+          [0,0,2,0,2,0,0,3,0,0],
+          [0,0,0,0,3,0,0,3,0,0],
+          [0,2,0,3,3,0,0,2,0,0],
+          [0,0,0,3,3,0,0,2,0,0],
+          [0,0,0,3,3,0,0,3,0,0],
+          [0,0,0,3,3,0,3,3,3,0],
+          [0,0,0,3,3,0,0,3,0,0],
+          [0,2,0,3,3,0,0,0,0,0]
         ],
         numTargets : 3,
-        playerPosition: [0,1],
+        playerPosition: [5,1],
         playerSpeed: 1.5,
         hitbox: 10
       });

@@ -43,9 +43,12 @@ var Maze = function () {
       this.tempCtx = this.tempCanvas.getContext('2d');
 
       this.setPlayer();
+      this.setGameState();
       this.preRenderMaze();
       this.addListeners();
       this.render();
+
+      this.loop();
     }
   }, {
     key: 'checkLoadedImages',
@@ -65,9 +68,22 @@ var Maze = function () {
 
         velX: 0,
         velY: 0,
-
+        speed: Math.round(this.options.playerSpeed * this.squareLength / 60),
         sizeX: this.squareLength,
         sizeY: this.squareLength
+      };
+    }
+  }, {
+    key: 'setGameState',
+    value: function setGameState() {
+      this.gameState = {
+        ended: false,
+        score: 0
+      };
+
+      this.gridMap = {
+        walls: [],
+        targets: []
       };
     }
   }, {
@@ -83,11 +99,29 @@ var Maze = function () {
   }, {
     key: 'clickHandler',
     value: function clickHandler(e) {
-      console.log(e);
-      if (Math.abs(e.clientX - this.player.x) > Math.abs(e.clientY - this.player.y)) {
-        console.log('x');
+
+      var canvasPos = this.mainCanvas.getBoundingClientRect();
+      var canvasXOffset = canvasPos.left;
+      var canvasYOffset = canvasPos.top;
+
+      var canvasClickX = e.clientX - canvasXOffset;
+      var canvasClickY = e.clientY - canvasYOffset;
+      if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
+        if (canvasClickX > this.player.x + this.player.sizeX / 2) {
+          this.player.velY = 0;
+          this.player.velX = 1 * this.player.speed;
+        } else if (canvasClickX < this.player.x + this.player.sizeX / 2) {
+          this.player.velY = 0;
+          this.player.velX = -1 * this.player.speed;
+        }
       } else {
-        console.log('y');
+        if (canvasClickY > this.player.y + this.player.sizeY / 2) {
+          this.player.velX = 0;
+          this.player.velY = 1 * this.player.speed;
+        } else if (canvasClickY < this.player.y + this.player.sizeY / 2) {
+          this.player.velX = 0;
+          this.player.velY = -1 * this.player.speed;
+        }
       }
     }
   }, {
@@ -103,12 +137,16 @@ var Maze = function () {
       for (var y = 0; y < ySquares; y++) {
         for (var x = 0; x < xSquares; x++) {
           if (this.options.mazeLayout[y][x] === 3) {
+            this.gridMap.walls.push([x * this.squareLength, y * this.squareLength]);
             context.fillRect(x * this.squareLength, y * this.squareLength, this.squareLength, this.squareLength);
           } else if (this.options.mazeLayout[y][x] === 2) {
+            this.gridMap.targets.push([x * this.squareLength, y * this.squareLength]);
             context.drawImage(this.tokenImage, x * this.squareLength, y * this.squareLength, this.squareLength, this.squareLength);
           }
         }
       }
+
+      console.log(this.gridMap);
     }
   }, {
     key: 'drawPlayer',
@@ -124,9 +162,7 @@ var Maze = function () {
   }, {
     key: 'updatePlayer',
     value: function updatePlayer() {
-
-      checkCollisions();
-
+      this.checkCollisions();
       this.player.x += this.player.velX;
       this.player.y += this.player.velY;
     }
@@ -137,14 +173,18 @@ var Maze = function () {
       var playerMidY = this.player.y + this.player.sizeY / 2;
 
       if (this.player.x + this.player.sizeX > this.mainCanvas.width) {
-        this.player.x = this.mainCanvas - this.player.sizeX;
+        this.player.velX = 0;
+        this.player.x = this.mainCanvas.width - this.player.sizeX;
       } else if (this.player.x < 0) {
+        this.player.velX = 0;
         this.player.x = 0;
       }
 
       if (this.player.y + this.player.sizeY > this.mainCanvas.height) {
+        this.player.velY = 0;
         this.player.y = this.mainCanvas - this.player.sizeY;
       } else if (this.player.y < 0) {
+        this.player.velY = 0;
         this.player.y = 0;
       }
 
@@ -159,23 +199,13 @@ var Maze = function () {
     }
   }, {
     key: 'loop',
-    value: function (_loop) {
-      function loop() {
-        return _loop.apply(this, arguments);
-      }
-
-      loop.toString = function () {
-        return _loop.toString();
-      };
-
-      return loop;
-    }(function () {
+    value: function loop() {
       if (!this.gameState.ended) {
-        requestAnimationFrame(loop);
-        updatePlayer();
-        render();
+        requestAnimationFrame(this.loop.bind(this));
+        this.updatePlayer();
+        this.render();
       }
-    })
+    }
   }]);
 
   return Maze;
@@ -192,9 +222,9 @@ var mazeGame = new Maze({
     playerImageUrl: 'build/images/player.png',
     tokenImageUrl: 'build/images/coin.png'
   },
-  mazeLayout: [[0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 0, 2, 0, 2], [0, 0, 0, 0, 3], [0, 2, 0, 3, 3]],
+  mazeLayout: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 3, 0, 0], [0, 0, 2, 0, 2, 0, 0, 3, 0, 0], [0, 0, 0, 0, 3, 0, 0, 3, 0, 0], [0, 2, 0, 3, 3, 0, 0, 2, 0, 0], [0, 0, 0, 3, 3, 0, 0, 2, 0, 0], [0, 0, 0, 3, 3, 0, 0, 3, 0, 0], [0, 0, 0, 3, 3, 0, 3, 3, 3, 0], [0, 0, 0, 3, 3, 0, 0, 3, 0, 0], [0, 2, 0, 3, 3, 0, 0, 0, 0, 0]],
   numTargets: 3,
-  playerPosition: [0, 1],
+  playerPosition: [5, 1],
   playerSpeed: 1.5,
   hitbox: 10
 });
