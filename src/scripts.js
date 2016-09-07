@@ -204,23 +204,38 @@ class Maze {
     let playerRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox, playerMidY);
     let playerLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY);
     let playerDownArrayPos = this.getGridPiece(playerMidX, playerMidY + this.player.hitbox);
-    let playerUpArrayPos = this.getGridPiece(playerMidX, playerMidY - this.player.hitbox);  
+    let playerUpArrayPos = this.getGridPiece(playerMidX, playerMidY - this.player.hitbox);
+
+    let playerUpRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox, playerMidY - this.player.hitbox);
+    let playerUpLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY - this.player.hitbox);
+
+    let playerDownRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox, playerMidY + this.player.hitbox);
+    let playerDownLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY + this.player.hitbox);
+
 
         // checking for contact with walls
-    if (this.player.velX > 0 && this.options.mazeLayout[playerRightArrayPos.j][playerRightArrayPos.i] === 3) {
+    if (this.player.velX > 0 && (this.options.mazeLayout[playerRightArrayPos.j][playerRightArrayPos.i] === 3 ||
+                                this.options.mazeLayout[playerUpRightArrayPos.j][playerUpRightArrayPos.i] === 3 ||
+                                this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3 )) {
       this.player.velX = 0;
       this.player.x -= this.player.bounceDistance;
     }
-    else if (this.player.velX < 0 && this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 3) {
+    else if (this.player.velX < 0 && (this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 3 ||
+                                      this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 ||
+                                      this.options.mazeLayout[playerDownLeftArrayPos.j][playerDownLeftArrayPos.i] === 3 )) {
       this.player.velX = 0;
       this.player.x += this.player.bounceDistance;
     }
-    else if (this.player.velY > 0 && this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] === 3) {
+    else if (this.player.velY > 0 && (this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] === 3 ||
+                                      this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3 ||
+                                      this.options.mazeLayout[playerDownLeftArrayPos.j][playerDownLeftArrayPos.i] === 3 )) {
       this.player.velY = 0;
       this.player.y -= this.player.bounceDistance;
 
     }
-    else if (this.player.velY < 0 && this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] === 3) {
+    else if (this.player.velY < 0 && (this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] === 3 ||
+                                      this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 ||
+                                      this.options.mazeLayout[playerUpRightArrayPos.j][playerUpRightArrayPos.i] === 3 )) {
       this.player.velY = 0;
       this.player.y += this.player.bounceDistance;
     }
