@@ -102,6 +102,10 @@ class Maze {
 
   addListeners() {
     this.mainCanvas.addEventListener('click', this.clickHandler.bind(this));
+
+    this.mainCanvas.addEventListener('touchstart', this.touchStartHandler.bind(this));
+    this.mainCanvas.addEventListener('touchend', this.touchEndHandler.bind(this));
+
     window.addEventListener('resize', this.resizeCanvas.bind(this));
   }
 
@@ -129,6 +133,49 @@ class Maze {
         this.player.velY  = 1 * this.player.speed;
       }
       else if (canvasClickY < this.player.y + (this.player.sizeY/2)) {
+        this.player.velX = 0;
+        this.player.velY = -1 * this.player.speed;
+      }
+    }
+
+  }
+
+  touchStartHandler(e) {
+    const canvasPos = this.mainCanvas.getBoundingClientRect();
+    const canvasXOffset = canvasPos.left;
+    const canvasYOffset = canvasPos.top;
+
+    this.startX = e.touches[0].clientX - canvasXOffset;
+    this.startY = e.touches[0].clientY - canvasYOffset;
+
+
+
+  }
+
+  touchEndHandler(e) {
+    const canvasPos = this.mainCanvas.getBoundingClientRect();
+    const canvasXOffset = canvasPos.left;
+    const canvasYOffset = canvasPos.top;
+
+    this.endX = e.changedTouches[0].clientX - canvasXOffset;
+    this.endY = e.changedTouches[0].clientY - canvasYOffset;
+
+    if (Math.abs(this.endX - this.startX) > Math.abs(this.endY - this.startY)) {
+      if (this.endX > this.startX) {
+        this.player.velY = 0;
+        this.player.velX = 1 * this.player.speed;
+      }
+      else if (this.endX < this.startX) {
+        this.player.velY = 0;
+        this.player.velX = -1 * this.player.speed;
+      }
+    }
+    else {
+      if (this.endY > this.startY) {
+        this.player.velX = 0;
+        this.player.velY = 1 * this.player.speed;
+      }
+      else if (this.endY < this.startY) {
         this.player.velX = 0;
         this.player.velY = -1 * this.player.speed;
       }
