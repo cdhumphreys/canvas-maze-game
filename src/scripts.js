@@ -117,6 +117,8 @@ class Maze {
 
     let canvasClickX = e.clientX - canvasXOffset;
     let canvasClickY = e.clientY - canvasYOffset;
+
+
     if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
       if (canvasClickX > this.player.x + (this.player.sizeX/2)) {
         this.player.velY = 0;
@@ -147,8 +149,6 @@ class Maze {
 
     this.startX = e.touches[0].clientX - canvasXOffset;
     this.startY = e.touches[0].clientY - canvasYOffset;
-
-
 
   }
 

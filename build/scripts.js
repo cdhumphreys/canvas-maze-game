@@ -129,6 +129,7 @@ var Maze = function () {
 
       var canvasClickX = e.clientX - canvasXOffset;
       var canvasClickY = e.clientY - canvasYOffset;
+
       if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
         if (canvasClickX > this.player.x + this.player.sizeX / 2) {
           this.player.velY = 0;
