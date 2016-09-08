@@ -41,7 +41,9 @@ class Maze {
 
     this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasWidth);
 
-    this.squareLength = Math.round(this.options.canvasWidth / this.options.mazeLayout[0].length);
+    this.sizeCanvas();
+
+    this.squareLength = Math.round(this.mainCanvas.width / this.options.mazeLayout[0].length);
 
     this.tempCanvas.height = this.mainCanvas.height = this.squareLength * this.options.mazeLayout.length;
 
@@ -100,6 +102,7 @@ class Maze {
 
   addListeners() {
     this.mainCanvas.addEventListener('click', this.clickHandler.bind(this));
+    window.addEventListener('resize', this.resizeCanvas.bind(this));
   }
 
   clickHandler(e) {
@@ -141,22 +144,42 @@ class Maze {
     const xLimit = xSquares*this.squareLength;
 
     context.fillStyle = this.options.wallColour;
+    context.lineWidth = this.options.lineWidth;
+    context.strokeStyle = this.options.lineColour;
     for (let y = 0; y < ySquares; y++) {
       for (let x = 0; x < xSquares; x++) {
         if (this.options.mazeLayout[y][x] === 3) {
           context.fillRect(x*this.squareLength,y*this.squareLength,this.squareLength, this.squareLength);
+
         }
         else if (this.options.mazeLayout[y][x] === 2) {
           context.drawImage(this.tokenImage,x*this.squareLength,y*this.squareLength, this.squareLength, this.squareLength);
         }
+        if (this.options.grid) {
+          this.drawSquare(context, x*this.squareLength, y*this.squareLength, this.squareLength);
+        }
+
 
       }
     }
   }
 
+  drawSquare(context, x, y, length) {
+      context.beginPath();
+      context.moveTo(x,y);
+      context.lineTo(x+length, y);
+      context.lineTo(x+length, y+length);
+      context.lineTo(x, y+length);
+      context.closePath();
+      context.stroke();
+  }
+
   clearSquare(context, x ,y) {
     context.fillStyle = this.options.backgroundColour;
     context.fillRect(x*this.squareLength,y*this.squareLength,this.squareLength, this.squareLength);
+    if (this.options.grid) {
+      this.drawSquare(context, x*this.squareLength, y*this.squareLength, this.squareLength);
+    }
   }
 
   drawPlayer(context, x, y, xSize, ySize) {
@@ -303,21 +326,57 @@ class Maze {
 
   }
 
+  sizeCanvas() {
+    if (window.innerWidth > window.innerHeight) {
+      // use height as limit
+      this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasSize * window.innerHeight);
+    }
+    else {
+      // use width as limit
+      this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasSize * window.innerWidth);
+      console.log(this)
+    }
+  }
+
+  resizeCanvas() {
+    this.gameState.paused = true;
+    if (window.innerWidth > window.innerHeight) {
+      // use height as limit
+      this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasSize * window.innerHeight);
+    }
+    else {
+      // use width as limit
+      this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasSize * window.innerWidth);
+    }
+
+    this.squareLength = Math.round(this.mainCanvas.width / this.options.mazeLayout[0].length);
+    this.tempCanvas.height = this.mainCanvas.height = this.squareLength * this.options.mazeLayout.length;
+
+    this.preRenderMaze();
+    this.setPlayer();
+    this.gameState.paused = false;
+
+  }
+
   loop() {
-    if (!this.gameState.ended) {
+    if (!this.gameState.ended && !this.gameState.paused) {
       requestAnimationFrame(this.loop.bind(this));
       this.updatePlayer();
       this.render();
     }
-
-
   }
+
+
+
+
 }
 
 const mazeGame = new Maze ({
         mazeContainer: document.getElementById('maze-container'),
-        canvasWidth: 0.8 * window.innerWidth,
+        canvasSize: 0.8,
         grid: true,
+        lineColour: '#000',
+        lineWidth: 2,
         wallColour: 'midnightblue',
         playerColour: '#F00',
         backgroundColour: '#9f9a9a',
@@ -337,6 +396,6 @@ const mazeGame = new Maze ({
           [0,0,0,3,3,0,0,3,0,0],
           [0,2,0,3,3,0,0,0,0,0]
         ],
-        playerSpeed: 1.5,
+        playerSpeed: 3,
         hitbox: 10
       });
