@@ -40,35 +40,35 @@ var Maze = function () {
     key: 'init',
     value: function init() {
 
+      // create canvases, score
       this.mainCanvas = document.createElement('canvas');
       this.tempCanvas = document.createElement('canvas');
-
       this.scoreBoard = document.createElement('div');
       this.scoreBoard.id = 'scoreBoard';
       this.scoreBoard.innerHTML = 'Score: ' + 0;
 
+      // set size of canvas
       this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasWidth);
-
       this.sizeCanvas();
-
       this.squareLength = Math.round(this.mainCanvas.width / this.options.mazeLayout[0].length);
-
       this.tempCanvas.height = this.mainCanvas.height = this.squareLength * this.options.mazeLayout.length;
-
       this.options.mazeContainer.appendChild(this.mainCanvas);
       this.options.mazeContainer.appendChild(this.scoreBoard);
-
       this.mainCtx = this.mainCanvas.getContext('2d');
       this.tempCtx = this.tempCanvas.getContext('2d');
 
+      // player sprite setup
       this.options.spritesheet.frame.width = this.options.spritesheet.width / this.options.spritesheet.framesX;
       this.options.spritesheet.frame.height = this.options.spritesheet.height / this.options.spritesheet.framesY;
       this.timestep = 60 / this.options.spritesheet.spriteAnimFreq;
+
+      //setup game
       this.setPlayer();
       this.setGameState();
       this.preRenderMaze();
       this.addListeners();
 
+      // setup animation and start render loop
       this.startTime = Date.now();
       this.render();
       this.loop();
@@ -96,8 +96,11 @@ var Maze = function () {
         sizeX: this.squareLength,
         sizeY: this.squareLength,
 
-        hitbox: 15,
-        bounceDistance: 2,
+        hitbox: {
+          x: Math.round(this.squareLength * this.options.hitbox.x),
+          y: Math.round(this.squareLength * this.options.hitbox.y)
+        },
+        bounceDistance: Math.round(this.squareLength / 8),
 
         spriteX: 0,
         spriteY: 1
@@ -184,17 +187,21 @@ var Maze = function () {
         if (this.endX > this.startX) {
           this.player.velY = 0;
           this.player.velX = 1 * this.player.speed;
+          this.player.direction = 'right';
         } else if (this.endX < this.startX) {
           this.player.velY = 0;
           this.player.velX = -1 * this.player.speed;
+          this.player.direction = 'left';
         }
       } else {
         if (this.endY > this.startY) {
           this.player.velX = 0;
           this.player.velY = 1 * this.player.speed;
+          this.player.direction = 'down';
         } else if (this.endY < this.startY) {
           this.player.velX = 0;
           this.player.velY = -1 * this.player.speed;
+          this.player.direction = 'up';
         }
       }
     }
@@ -351,16 +358,16 @@ var Maze = function () {
         this.player.y = 0;
       }
 
-      var playerRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox, playerMidY);
-      var playerLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY);
-      var playerDownArrayPos = this.getGridPiece(playerMidX, playerMidY + this.player.hitbox);
-      var playerUpArrayPos = this.getGridPiece(playerMidX, playerMidY - this.player.hitbox);
+      var playerRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox.x, playerMidY);
+      var playerLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox.x, playerMidY);
+      var playerDownArrayPos = this.getGridPiece(playerMidX, playerMidY + this.player.hitbox.y);
+      var playerUpArrayPos = this.getGridPiece(playerMidX, playerMidY - this.player.hitbox.y);
 
-      var playerUpRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox, playerMidY - this.player.hitbox);
-      var playerUpLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY - this.player.hitbox);
+      var playerUpRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox.x, playerMidY - this.player.hitbox.y);
+      var playerUpLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox.x, playerMidY - this.player.hitbox.y);
 
-      var playerDownRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox, playerMidY + this.player.hitbox);
-      var playerDownLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox, playerMidY + this.player.hitbox);
+      var playerDownRightArrayPos = this.getGridPiece(playerMidX + this.player.hitbox.x, playerMidY + this.player.hitbox.y);
+      var playerDownLeftArrayPos = this.getGridPiece(playerMidX - this.player.hitbox.x, playerMidY + this.player.hitbox.y);
 
       // checking for contact with walls
       if (this.player.velX > 0 && (this.options.mazeLayout[playerRightArrayPos.j][playerRightArrayPos.i] === 3 || this.options.mazeLayout[playerUpRightArrayPos.j][playerUpRightArrayPos.i] === 3 || this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3)) {
@@ -470,5 +477,8 @@ var mazeGame = new Maze({
   },
   mazeLayout: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 3, 0, 0], [0, 0, 2, 0, 2, 0, 0, 3, 0, 0], [0, 0, 0, 0, 3, 0, 0, 3, 0, 0], [0, 2, 0, 3, 3, 0, 0, 2, 0, 0], [0, 0, 0, 3, 3, 0, 0, 2, 0, 0], [0, 0, 0, 3, 3, 0, 0, 3, 0, 0], [0, 0, 0, 3, 3, 0, 3, 3, 3, 0], [0, 0, 0, 3, 3, 0, 0, 3, 0, 0], [0, 2, 0, 3, 3, 0, 0, 0, 0, 0]],
   playerSpeed: 3,
-  hitbox: 10
+  hitbox: {
+    x: 0.42,
+    y: 0.45
+  }
 });
