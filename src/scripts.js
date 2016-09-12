@@ -1,7 +1,13 @@
 'use strict';
 class Maze {
   constructor(options) {
-    this.options = {...options};
+    this.options = {
+      gameEndedCallback: null,
+      playerInteractionCallback: null,
+      targetCollectedCallback: null,
+      playerCollisionCallback: null,
+      ...options
+    };
 
     this.imagesLoaded = 0;
     this.imagesTotal = Object.keys(this.options.imgs).length;
@@ -308,8 +314,14 @@ class Maze {
     this.gameState.score++;
     this.scoreBoard.innerHTML = 'Score: ' + this.gameState.score;
 
+    if (this.options.targetCollectedCallback !== null) {
+      this.options.targetCollectedCallback();
+    }
     if (this.gameState.score >= this.numTargets) {
       this.gameState.ended = true;
+      if (this.options.gameEndedCallback !== null) {
+        this.options.gameEndedCallback();
+      }
     }
   }
 
@@ -381,6 +393,9 @@ class Maze {
 
       this.player.velX = 0;
       this.player.x -= this.player.bounceDistance;
+      if (this.options.playerCollisionCallback !== null) {
+        this.options.playerCollisionCallback();
+      }
     }
     else if (this.player.velX < 0 && (this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 ||
@@ -388,6 +403,9 @@ class Maze {
 
       this.player.velX = 0;
       this.player.x += this.player.bounceDistance;
+      if (this.options.playerCollisionCallback !== null) {
+        this.options.playerCollisionCallback();
+      }
     }
     else if (this.player.velY > 0 && (this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] === 3 ||
                                       this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3 ||
@@ -395,6 +413,9 @@ class Maze {
 
       this.player.velY = 0;
       this.player.y -= this.player.bounceDistance;
+      if (this.options.playerCollisionCallback !== null) {
+        this.options.playerCollisionCallback();
+      }
 
     }
     else if (this.player.velY < 0 && (this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] === 3 ||
@@ -403,6 +424,9 @@ class Maze {
 
       this.player.velY = 0;
       this.player.y += this.player.bounceDistance;
+      if (this.options.playerCollisionCallback !== null) {
+        this.options.playerCollisionCallback();
+      }
     }
 
     // collecting targets
@@ -440,7 +464,6 @@ class Maze {
     else {
       // use width as limit
       this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasSize * window.innerWidth);
-      console.log(this)
     }
   }
 
@@ -516,5 +539,14 @@ const mazeGame = new Maze ({
         hitbox: {
           x: 0.42,
           y: 0.45
+        },
+        targetCollectedCallback: function() {
+          console.log('target collected');
+        },
+        playerCollisionCallback: function() {
+          console.log('hit wall');
+        },
+        gameEndedCallback: function() {
+          console.log('game ended');
         }
       });

@@ -10,7 +10,12 @@ var Maze = function () {
   function Maze(options) {
     _classCallCheck(this, Maze);
 
-    this.options = _extends({}, options);
+    this.options = _extends({
+      gameEndedCallback: null,
+      playerInteractionCallback: null,
+      targetCollectedCallback: null,
+      playerCollisionCallback: null
+    }, options);
 
     this.imagesLoaded = 0;
     this.imagesTotal = Object.keys(this.options.imgs).length;
@@ -308,8 +313,14 @@ var Maze = function () {
       this.gameState.score++;
       this.scoreBoard.innerHTML = 'Score: ' + this.gameState.score;
 
+      if (this.options.targetCollectedCallback !== null) {
+        this.options.targetCollectedCallback();
+      }
       if (this.gameState.score >= this.numTargets) {
         this.gameState.ended = true;
+        if (this.options.gameEndedCallback !== null) {
+          this.options.gameEndedCallback();
+        }
       }
     }
   }, {
@@ -374,18 +385,30 @@ var Maze = function () {
 
         this.player.velX = 0;
         this.player.x -= this.player.bounceDistance;
+        if (this.options.playerCollisionCallback !== null) {
+          this.options.playerCollisionCallback();
+        }
       } else if (this.player.velX < 0 && (this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 3 || this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 || this.options.mazeLayout[playerDownLeftArrayPos.j][playerDownLeftArrayPos.i] === 3)) {
 
         this.player.velX = 0;
         this.player.x += this.player.bounceDistance;
+        if (this.options.playerCollisionCallback !== null) {
+          this.options.playerCollisionCallback();
+        }
       } else if (this.player.velY > 0 && (this.options.mazeLayout[playerDownArrayPos.j][playerDownArrayPos.i] === 3 || this.options.mazeLayout[playerDownRightArrayPos.j][playerDownRightArrayPos.i] === 3 || this.options.mazeLayout[playerDownLeftArrayPos.j][playerDownLeftArrayPos.i] === 3)) {
 
         this.player.velY = 0;
         this.player.y -= this.player.bounceDistance;
+        if (this.options.playerCollisionCallback !== null) {
+          this.options.playerCollisionCallback();
+        }
       } else if (this.player.velY < 0 && (this.options.mazeLayout[playerUpArrayPos.j][playerUpArrayPos.i] === 3 || this.options.mazeLayout[playerUpLeftArrayPos.j][playerUpLeftArrayPos.i] === 3 || this.options.mazeLayout[playerUpRightArrayPos.j][playerUpRightArrayPos.i] === 3)) {
 
         this.player.velY = 0;
         this.player.y += this.player.bounceDistance;
+        if (this.options.playerCollisionCallback !== null) {
+          this.options.playerCollisionCallback();
+        }
       }
 
       // collecting targets
@@ -416,7 +439,6 @@ var Maze = function () {
       } else {
         // use width as limit
         this.tempCanvas.width = this.mainCanvas.width = Math.round(this.options.canvasSize * window.innerWidth);
-        console.log(this);
       }
     }
   }, {
@@ -480,5 +502,11 @@ var mazeGame = new Maze({
   hitbox: {
     x: 0.42,
     y: 0.45
+  },
+  targetCollectedCallback: function targetCollectedCallback() {
+    console.log('target collected');
+  },
+  playerCollisionCallback: function playerCollisionCallback() {
+    console.log('hit wall');
   }
 });
