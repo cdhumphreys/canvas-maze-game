@@ -58,7 +58,7 @@ class Maze {
     // player sprite setup
     this.options.spritesheet.frame.width = this.options.spritesheet.width / this.options.spritesheet.framesX;
     this.options.spritesheet.frame.height = this.options.spritesheet.height / this.options.spritesheet.framesY;
-    this.timestep = 60/this.options.spritesheet.spriteAnimFreq;
+    this.timestep = Math.round(60/this.options.spritesheet.spriteAnimFreq);
 
     //setup game
     this.setPlayer();
@@ -102,7 +102,7 @@ class Maze {
       spriteX: 0,
       spriteY: 1
 
-    }
+    };
   }
 
   setGameState() {
@@ -136,30 +136,32 @@ class Maze {
     let canvasClickY = e.clientY - canvasYOffset;
 
 
-    if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
-      if (canvasClickX > this.player.x + (this.player.sizeX/2)) {
-        this.player.velY = 0;
-        this.player.velX  = 1 * this.player.speed;
-        this.player.direction = 'right';
-      }
-      else if (canvasClickX < this.player.x + (this.player.sizeX/2)) {
-        this.player.velY = 0;
-        this.player.velX = -1 * this.player.speed;
-        this.player.direction = 'left';
-      }
-    }
-    else {
-      if (canvasClickY > this.player.y + (this.player.sizeY/2)) {
-        this.player.velX = 0;
-        this.player.velY  = 1 * this.player.speed;
-        this.player.direction = 'down';
-      }
-      else if (canvasClickY < this.player.y + (this.player.sizeY/2)) {
-        this.player.velX = 0;
-        this.player.velY = -1 * this.player.speed;
-        this.player.direction = 'up';
-      }
-    }
+    // if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
+    //   if (canvasClickX > this.player.x + (this.player.sizeX/2)) {
+    //     this.player.velY = 0;
+    //     this.player.velX  = 1 * this.player.speed;
+    //     this.player.direction = 'right';
+    //   }
+    //   else if (canvasClickX < this.player.x + (this.player.sizeX/2)) {
+    //     this.player.velY = 0;
+    //     this.player.velX = -1 * this.player.speed;
+    //     this.player.direction = 'left';
+    //   }
+    // }
+    // else {
+    //   if (canvasClickY > this.player.y + (this.player.sizeY/2)) {
+    //     this.player.velX = 0;
+    //     this.player.velY  = 1 * this.player.speed;
+    //     this.player.direction = 'down';
+    //   }
+    //   else if (canvasClickY < this.player.y + (this.player.sizeY/2)) {
+    //     this.player.velX = 0;
+    //     this.player.velY = -1 * this.player.speed;
+    //     this.player.direction = 'up';
+    //   }
+    // }
+
+    this.movePlayer(this.player.x + (this.player.sizeX/2), this.player.y + (this.player.sizeY/2), canvasClickX, canvasClickY);
 
   }
 
@@ -181,42 +183,44 @@ class Maze {
     this.endX = e.changedTouches[0].clientX - canvasXOffset;
     this.endY = e.changedTouches[0].clientY - canvasYOffset;
 
-    if (Math.abs(this.endX - this.startX) > Math.abs(this.endY - this.startY)) {
-      if (this.endX > this.startX) {
+    this.movePlayer(this.startX, this.startY, this.endX, this.endY);
+
+  }
+
+  movePlayer(startX, startY, endX, endY) {
+    if (Math.abs(endX - startX) > Math.abs(endY - startY)) {
+      if (endX > startX) {
         this.player.velY = 0;
         this.player.velX = 1 * this.player.speed;
         this.player.direction = 'right';
       }
-      else if (this.endX < this.startX) {
+      else if (endX < startX) {
         this.player.velY = 0;
         this.player.velX = -1 * this.player.speed;
         this.player.direction = 'left';
       }
     }
     else {
-      if (this.endY > this.startY) {
+      if (endY > startY) {
         this.player.velX = 0;
         this.player.velY = 1 * this.player.speed;
         this.player.direction = 'down';
       }
-      else if (this.endY < this.startY) {
+      else if (endY < startY) {
         this.player.velX = 0;
         this.player.velY = -1 * this.player.speed;
         this.player.direction = 'up';
       }
     }
   }
-
   drawGrid(context, xSquares, ySquares) {
     context.fillStyle = this.options.backgroundColour;
     context.fillRect(0,0,this.mainCanvas.width, this.mainCanvas.height);
 
-    const yLimit = ySquares*this.squareLength;
-    const xLimit = xSquares*this.squareLength;
-
     context.fillStyle = this.options.wallColour;
     context.lineWidth = this.options.lineWidth;
     context.strokeStyle = this.options.lineColour;
+
     for (let y = 0; y < ySquares; y++) {
       for (let x = 0; x < xSquares; x++) {
         if (this.options.mazeLayout[y][x] === 3) {
@@ -259,48 +263,48 @@ class Maze {
   render() {
     this.mainCtx.drawImage(this.tempCanvas, 0, 0);
     if (this.now - this.startTime > this.timestep) {
-      this.startTime = Date.now();
-      if (this.player.velX === 0 && this.player.velY === 0) {
-        if (this.player.direction === 'up') {
-          this.player.spriteX = 1;
-          this.player.spriteY = 3;
+        this.startTime = Date.now();
+        if (this.player.velX === 0 && this.player.velY === 0) {
+          if (this.player.direction === 'up') {
+            this.player.spriteX = 1;
+            this.player.spriteY = 3;
+          }
+          else if (this.player.direction === 'right') {
+            this.player.spriteX = 1;
+            this.player.spriteY = 1;
+          }
+          else if (this.player.direction === 'down') {
+            this.player.spriteX = 1;
+            this.player.spriteY = 0;
+          }
+          else if (this.player.direction === 'left') {
+            this.player.spriteX = 0;
+            this.player.spriteY = 2;
+          }
         }
-        else if (this.player.direction === 'right') {
-          this.player.spriteX = 1;
-          this.player.spriteY = 1;
-        }
-        else if (this.player.direction === 'down') {
-          this.player.spriteX = 1;
-          this.player.spriteY = 0;
-        }
-        else if (this.player.direction === 'left') {
-          this.player.spriteX = 0;
-          this.player.spriteY = 2;
-        }
+        else {
+          this.player.spriteX++;
+          if (this.player.spriteX > this.options.spritesheet.framesX - 1) {
+            this.player.spriteX = 0;
+          }
+          if (this.player.velX > 0) {
+            this.player.spriteY = 1;
+          }
+          else if (this.player.velX < 0) {
+            this.player.spriteY = 2;
+          }
+          else if (this.player.velY > 0) {
+            this.player.spriteY = 0;
+          }
+          else if (this.player.velY < 0) {
+            this.player.spriteY = 3;
+          }
       }
-      else {
-        this.player.spriteX++;
-        if (this.player.spriteX > this.options.spritesheet.framesX - 1) {
-          this.player.spriteX = 0;
-        }
-        if (this.player.velX > 0) {
-          this.player.spriteY = 1;
-        }
-        else if (this.player.velX < 0) {
-          this.player.spriteY = 2;
-        }
-        else if (this.player.velY > 0) {
-          this.player.spriteY = 0;
-        }
-        else if (this.player.velY < 0) {
-          this.player.spriteY = 3;
-        }
     }
-  }
-  this.drawPlayer(
-    this.mainCtx, this.player.spriteX * this.options.spritesheet.frame.width, this.player.spriteY * this.options.spritesheet.frame.height, this.options.spritesheet.frame.width, this.options.spritesheet.frame.height,
-    this.player.x, this.player.y, this.player.sizeX, this.player.sizeY
-  );
+    this.drawPlayer(
+      this.mainCtx, this.player.spriteX * this.options.spritesheet.frame.width, this.player.spriteY * this.options.spritesheet.frame.height, this.options.spritesheet.frame.width, this.options.spritesheet.frame.height,
+      this.player.x, this.player.y, this.player.sizeX, this.player.sizeY
+    );
   }
 
   updatePlayer() {
@@ -318,10 +322,10 @@ class Maze {
       this.options.targetCollectedCallback();
     }
     if (this.gameState.score >= this.numTargets) {
-      this.gameState.ended = true;
       if (this.options.gameEndedCallback !== null) {
         this.options.gameEndedCallback();
       }
+      this.gameState.ended = true;
     }
   }
 
@@ -437,7 +441,7 @@ class Maze {
     }
 
     else if (this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] === 2) {
-        this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] = 0
+        this.options.mazeLayout[playerLeftArrayPos.j][playerLeftArrayPos.i] = 0;
         this.incrementScore();
         this.clearSquare(this.tempCtx, playerLeftArrayPos.i, playerLeftArrayPos.j);
     }
@@ -520,7 +524,7 @@ const mazeGame = new Maze ({
           height: 2400,
           framesX: 4,
           framesY: 4,
-          spriteAnimFreq: 0.8,
+          spriteAnimFreq: 0.6,
           frame: {}
         },
         mazeLayout: [

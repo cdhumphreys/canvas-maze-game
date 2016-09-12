@@ -65,7 +65,7 @@ var Maze = function () {
       // player sprite setup
       this.options.spritesheet.frame.width = this.options.spritesheet.width / this.options.spritesheet.framesX;
       this.options.spritesheet.frame.height = this.options.spritesheet.height / this.options.spritesheet.framesY;
-      this.timestep = 60 / this.options.spritesheet.spriteAnimFreq;
+      this.timestep = Math.round(60 / this.options.spritesheet.spriteAnimFreq);
 
       //setup game
       this.setPlayer();
@@ -146,27 +146,32 @@ var Maze = function () {
       var canvasClickX = e.clientX - canvasXOffset;
       var canvasClickY = e.clientY - canvasYOffset;
 
-      if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
-        if (canvasClickX > this.player.x + this.player.sizeX / 2) {
-          this.player.velY = 0;
-          this.player.velX = 1 * this.player.speed;
-          this.player.direction = 'right';
-        } else if (canvasClickX < this.player.x + this.player.sizeX / 2) {
-          this.player.velY = 0;
-          this.player.velX = -1 * this.player.speed;
-          this.player.direction = 'left';
-        }
-      } else {
-        if (canvasClickY > this.player.y + this.player.sizeY / 2) {
-          this.player.velX = 0;
-          this.player.velY = 1 * this.player.speed;
-          this.player.direction = 'down';
-        } else if (canvasClickY < this.player.y + this.player.sizeY / 2) {
-          this.player.velX = 0;
-          this.player.velY = -1 * this.player.speed;
-          this.player.direction = 'up';
-        }
-      }
+      // if (Math.abs(canvasClickX - this.player.x) > Math.abs(canvasClickY - this.player.y)) {
+      //   if (canvasClickX > this.player.x + (this.player.sizeX/2)) {
+      //     this.player.velY = 0;
+      //     this.player.velX  = 1 * this.player.speed;
+      //     this.player.direction = 'right';
+      //   }
+      //   else if (canvasClickX < this.player.x + (this.player.sizeX/2)) {
+      //     this.player.velY = 0;
+      //     this.player.velX = -1 * this.player.speed;
+      //     this.player.direction = 'left';
+      //   }
+      // }
+      // else {
+      //   if (canvasClickY > this.player.y + (this.player.sizeY/2)) {
+      //     this.player.velX = 0;
+      //     this.player.velY  = 1 * this.player.speed;
+      //     this.player.direction = 'down';
+      //   }
+      //   else if (canvasClickY < this.player.y + (this.player.sizeY/2)) {
+      //     this.player.velX = 0;
+      //     this.player.velY = -1 * this.player.speed;
+      //     this.player.direction = 'up';
+      //   }
+      // }
+
+      this.movePlayer(this.player.x + this.player.sizeX / 2, this.player.y + this.player.sizeY / 2, canvasClickX, canvasClickY);
     }
   }, {
     key: 'touchStartHandler',
@@ -188,22 +193,27 @@ var Maze = function () {
       this.endX = e.changedTouches[0].clientX - canvasXOffset;
       this.endY = e.changedTouches[0].clientY - canvasYOffset;
 
-      if (Math.abs(this.endX - this.startX) > Math.abs(this.endY - this.startY)) {
-        if (this.endX > this.startX) {
+      this.movePlayer(this.startX, this.startY, this.endX, this.endY);
+    }
+  }, {
+    key: 'movePlayer',
+    value: function movePlayer(startX, startY, endX, endY) {
+      if (Math.abs(endX - startX) > Math.abs(endY - startY)) {
+        if (endX > startX) {
           this.player.velY = 0;
           this.player.velX = 1 * this.player.speed;
           this.player.direction = 'right';
-        } else if (this.endX < this.startX) {
+        } else if (endX < startX) {
           this.player.velY = 0;
           this.player.velX = -1 * this.player.speed;
           this.player.direction = 'left';
         }
       } else {
-        if (this.endY > this.startY) {
+        if (endY > startY) {
           this.player.velX = 0;
           this.player.velY = 1 * this.player.speed;
           this.player.direction = 'down';
-        } else if (this.endY < this.startY) {
+        } else if (endY < startY) {
           this.player.velX = 0;
           this.player.velY = -1 * this.player.speed;
           this.player.direction = 'up';
@@ -216,12 +226,10 @@ var Maze = function () {
       context.fillStyle = this.options.backgroundColour;
       context.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
 
-      var yLimit = ySquares * this.squareLength;
-      var xLimit = xSquares * this.squareLength;
-
       context.fillStyle = this.options.wallColour;
       context.lineWidth = this.options.lineWidth;
       context.strokeStyle = this.options.lineColour;
+
       for (var y = 0; y < ySquares; y++) {
         for (var x = 0; x < xSquares; x++) {
           if (this.options.mazeLayout[y][x] === 3) {
@@ -317,10 +325,10 @@ var Maze = function () {
         this.options.targetCollectedCallback();
       }
       if (this.gameState.score >= this.numTargets) {
-        this.gameState.ended = true;
         if (this.options.gameEndedCallback !== null) {
           this.options.gameEndedCallback();
         }
+        this.gameState.ended = true;
       }
     }
   }, {
@@ -494,7 +502,7 @@ var mazeGame = new Maze({
     height: 2400,
     framesX: 4,
     framesY: 4,
-    spriteAnimFreq: 0.8,
+    spriteAnimFreq: 0.6,
     frame: {}
   },
   mazeLayout: [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 3, 0, 0], [0, 0, 2, 0, 2, 0, 0, 3, 0, 0], [0, 0, 0, 0, 3, 0, 0, 3, 0, 0], [0, 2, 0, 3, 3, 0, 0, 2, 0, 0], [0, 0, 0, 3, 3, 0, 0, 2, 0, 0], [0, 0, 0, 3, 3, 0, 0, 3, 0, 0], [0, 0, 0, 3, 3, 0, 3, 3, 3, 0], [0, 0, 0, 3, 3, 0, 0, 3, 0, 0], [0, 2, 0, 3, 3, 0, 0, 0, 0, 0]],
