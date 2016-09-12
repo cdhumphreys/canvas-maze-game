@@ -508,5 +508,8 @@ var mazeGame = new Maze({
   },
   playerCollisionCallback: function playerCollisionCallback() {
     console.log('hit wall');
+  },
+  gameEndedCallback: function gameEndedCallback() {
+    console.log('game ended');
   }
 });
